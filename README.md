@@ -4,7 +4,7 @@
 
 Submitted by: **Saurabh Patwardhan**
 
-Time spent: **12** hours spent in total
+Time spent: **13** hours spent in total
 
 ## User Stories
 
