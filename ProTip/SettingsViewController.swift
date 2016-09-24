@@ -15,11 +15,12 @@ class SettingsViewController: UIViewController {
     let DARK_THEME_KEY = "DARK THEME KEY"
     
     let defaults = NSUserDefaults.standardUserDefaults()
-
+    
     @IBOutlet weak var themeSwitch: UISwitch!
     @IBOutlet weak var defaultTipPercentLabel: UILabel!
     @IBOutlet weak var defaultTipSlider: UISlider!
     @IBOutlet weak var jokeLabel: UILabel!
+    @IBOutlet weak var jokeHeader: UILabel!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,7 +36,7 @@ class SettingsViewController: UIViewController {
         
         // Do any additional setup after loading the view.
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -53,6 +54,7 @@ class SettingsViewController: UIViewController {
     override func motionEnded(motion: UIEventSubtype, withEvent event: UIEvent?) {
         if motion == .MotionShake {
             print("Shake detected!")
+            self.jokeHeader.text = "Hang on!"
             makeAPICall()
         }
     }
@@ -85,12 +87,12 @@ class SettingsViewController: UIViewController {
     
     func setTipColor(){
         let tipPercentage = Double(roundValue(defaultTipSlider))
-        if tipPercentage <= 15 {
-            defaultTipPercentLabel.textColor = UIColor.greenColor()
-        } else if tipPercentage <= 20 {
-            defaultTipPercentLabel.textColor = UIColor.orangeColor()
+        if tipPercentage <= 18 {
+            defaultTipPercentLabel.textColor = hexStringToUIColor("#5BE43A")
+        } else if tipPercentage <= 25 {
+            defaultTipPercentLabel.textColor = hexStringToUIColor("#FAB602")
         } else {
-            defaultTipPercentLabel.textColor = UIColor.redColor()
+            defaultTipPercentLabel.textColor = hexStringToUIColor("#AE153A")
         }
     }
     
@@ -116,10 +118,13 @@ class SettingsViewController: UIViewController {
                     // Parse the JSON to get the Joke
                     let jsonDictionary = try NSJSONSerialization.JSONObjectWithData(data!, options: NSJSONReadingOptions.MutableContainers) as! NSDictionary
                     let value = jsonDictionary["value"] as! NSDictionary
-                    let joke = value["joke"] as! String
+                    var joke = value["joke"] as! String
+                    //joke = "&quot;It works on my machine&quot; always holds true for Chuck Norris."
+                    //joke = "Chuck Norris is the only human being to display the Heisenberg uncertainty principle - you can never know both exactly where and how quickly he will roundhouse-kick you in the face."
+                    let formattedJoke = joke.stringByReplacingOccurrencesOfString("&quot;", withString: "\"")
                     // Update the label
-                    self.performSelectorOnMainThread("updateJokeLabel:", withObject: joke, waitUntilDone: false)
-                    print(joke)
+                    self.performSelectorOnMainThread(#selector(SettingsViewController.updateJokeLabel(_:)), withObject: formattedJoke, waitUntilDone: false)
+                    print(formattedJoke)
                 }
             } catch {
                 print("bad things happened")
@@ -130,17 +135,40 @@ class SettingsViewController: UIViewController {
     func updateJokeLabel(joke: String){
         self.jokeLabel.alpha = 1
         self.jokeLabel.text = joke
-        self.jokeLabel.numberOfLines = 0
+        //self.jokeLabel.numberOfLines = 0
         self.jokeLabel.sizeToFit()
+        self.jokeHeader.text = "Shake again for more!"
+    }
+    
+    func hexStringToUIColor (hex:String) -> UIColor {
+        var cString:String = hex.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet() as NSCharacterSet).uppercaseString
+        
+        if (cString.hasPrefix("#")) {
+            cString = cString.substringFromIndex(cString.startIndex.advancedBy(1))
+        }
+        
+        if ((cString.characters.count) != 6) {
+            return UIColor.grayColor()
+        }
+        
+        var rgbValue:UInt32 = 0
+        NSScanner(string: cString).scanHexInt(&rgbValue)
+        
+        return UIColor(
+            red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
+            green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
+            blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
+            alpha: CGFloat(1.0)
+        )
     }
     /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
-    }
-    */
-
+     // MARK: - Navigation
+     
+     // In a storyboard-based application, you will often want to do a little preparation before navigation
+     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
+     // Get the new view controller using segue.destinationViewController.
+     // Pass the selected object to the new view controller.
+     }
+     */
+    
 }

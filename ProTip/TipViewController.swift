@@ -9,7 +9,7 @@
 import UIKit
 
 class TipViewController: UIViewController {
-
+    
     let DEFAULT_TIP_KEY  = "DEFAULT TIP KEY"
     let LAST_BILL_AMOUNT = "LAST BILL AMOUNT"
     let LAST_TIP_INDEX = "LAST TIP INDEX"
@@ -18,25 +18,46 @@ class TipViewController: UIViewController {
     let RESTORED_STATE_KEY = "RESTORED STATE KEY"
     let DARK_THEME_KEY = "DARK THEME KEY"
     let LAUNCHED_BEFORE = "LAUNCHED BEFORE"
-
+    @IBOutlet weak var tipSectionView: UIView!
+    
     let TIME_INTEVAL_FOR_RECONSTRUCT : Double = 600
     let DEFAULT_TIP : Int = 15
     let defaults = NSUserDefaults.standardUserDefaults()
     var restoredState = false
     
+    var initialBarSeparatorPosition : CGFloat = 0.0
+    var initialBillLabelPosition : CGFloat = 0.0
+    var initialBillFieldPosition : CGFloat = 0.0
+    
     @IBOutlet weak var billField: UITextField!
-    @IBOutlet weak var tipLabel: UILabel!
-    @IBOutlet weak var totalLabel: UILabel!
+    @IBOutlet weak var tipPercentHeaderLabel: UILabel!
     @IBOutlet weak var tipPercentLabel: UILabel!
     @IBOutlet weak var tipPercentSlider: UISlider!
     @IBOutlet weak var tipHeaderLabel: UILabel!
+    @IBOutlet weak var tipLabel: UILabel!
+    @IBOutlet weak var totalLabel: UILabel!
     @IBOutlet weak var totalHeaderLabel: UILabel!
     @IBOutlet weak var separatorBarView: UIView!
+    @IBOutlet weak var billAmountLabel: UILabel!
+    @IBOutlet weak var leftSideBar: UIView!
+    @IBOutlet weak var rightSideBar: UIView!
+    @IBOutlet weak var bottomBar: UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
         print("ProTip view did load")
         // Do any additional setup after loading the view, typically from a nib.
+        initialBarSeparatorPosition = self.separatorBarView.frame.size.height
+        initialBillLabelPosition = self.billAmountLabel.center.y
+        initialBillFieldPosition = self.billField.center.y
+        
+        self.tipSectionView.alpha = 0
+        
+        self.leftSideBar.alpha = 0
+        self.rightSideBar.alpha = 0
+        self.bottomBar.alpha = 0
+        self.totalLabel.alpha = 0
+        self.totalHeaderLabel.alpha = 0
         
         NSNotificationCenter.defaultCenter().addObserver(
             self,
@@ -58,7 +79,7 @@ class TipViewController: UIViewController {
         )
         checkLastClosed()
     }
-
+    
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
@@ -84,12 +105,13 @@ class TipViewController: UIViewController {
             setDefaults()
         }
         defaults.setBool(false, forKey: RESTORED_STATE_KEY)
+        
     }
     
     @IBAction func onEditingChanged(sender: AnyObject) {
         updateUI()
     }
-
+    
     @IBAction func onSliderValueChanged(sender: AnyObject) {
         updateUI()
     }
@@ -177,15 +199,15 @@ class TipViewController: UIViewController {
         let tipPercentString = Int(roundValue(tipPercentSlider)).description + "%"
         
         tipPercentLabel.text = tipPercentString
-        if tipPercentage <= 15 {
-            tipPercentLabel.textColor = UIColor.greenColor()
-            tipLabel.textColor = UIColor.greenColor()
-        } else if tipPercentage <= 20 {
-            tipPercentLabel.textColor = UIColor.orangeColor()
-            tipLabel.textColor = UIColor.orangeColor()
+        if tipPercentage <= 18 {
+            tipPercentLabel.textColor = hexStringToUIColor("#5BE43A")
+            tipLabel.textColor = hexStringToUIColor("#5BE43A")
+        } else if tipPercentage <= 25 {
+            tipPercentLabel.textColor = hexStringToUIColor("#FAB602")
+            tipLabel.textColor = hexStringToUIColor("#FAB602")
         } else {
-            tipPercentLabel.textColor = UIColor.redColor()
-            tipLabel.textColor = UIColor.redColor()
+            tipPercentLabel.textColor = hexStringToUIColor("#AE153A")
+            tipLabel.textColor = hexStringToUIColor("#AE153A")
         }
         
         if total > 0 {
@@ -197,21 +219,71 @@ class TipViewController: UIViewController {
     
     func showHiddenFields(show: Bool){
         if show {
-            tipHeaderLabel.alpha = 1
-            tipLabel.alpha = 1
-            separatorBarView.alpha = 1
-            totalHeaderLabel.alpha = 1
-            totalLabel.alpha = 1
+            UIView.animateWithDuration(0.5, animations: {
+                self.separatorBarView.frame.size.height = 60
+                self.billAmountLabel.center.y = 30
+                self.billField.center.y = 30
+                
+                UIView.animateWithDuration(0.5, delay: 0.2, options: [], animations: {
+                    self.tipSectionView.alpha = 1
+                    self.tipHeaderLabel.alpha = 1
+                    self.tipLabel.alpha = 1
+                    self.tipPercentSlider.alpha = 1
+                    self.tipPercentLabel.alpha = 1
+                    self.tipPercentHeaderLabel.alpha = 1
+                    
+                    self.leftSideBar.alpha = 1
+                    self.rightSideBar.alpha = 1
+                    self.bottomBar.alpha = 1
+                    self.totalLabel.alpha = 1
+                    self.totalHeaderLabel.alpha = 1
+                    }, completion: nil)
+            })
         } else {
-            tipHeaderLabel.alpha = 0
-            tipLabel.alpha = 0
-            separatorBarView.alpha = 0
-            totalHeaderLabel.alpha = 0
-            totalLabel.alpha = 0
+            UIView.animateWithDuration(0.5, animations: {
+                self.separatorBarView.frame.size.height = self.initialBarSeparatorPosition
+                self.billAmountLabel.center.y = self.initialBillLabelPosition
+                self.billField.center.y = self.initialBillFieldPosition
+                
+                self.tipSectionView.alpha = 0
+                self.tipHeaderLabel.alpha = 0
+                self.tipLabel.alpha = 0
+                self.tipPercentSlider.alpha = 0
+                self.tipPercentLabel.alpha = 0
+                self.tipPercentHeaderLabel.alpha = 0
+                
+                self.leftSideBar.alpha = 0
+                self.rightSideBar.alpha = 0
+                self.bottomBar.alpha = 0
+                self.totalLabel.alpha = 0
+                self.totalHeaderLabel.alpha = 0
+            })
         }
     }
     
     func roundValue(slider: UISlider) -> Float {
         return roundf(slider.value);
+    }
+    
+    func hexStringToUIColor (hex:String) -> UIColor {
+        var cString:String = hex.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceAndNewlineCharacterSet() as NSCharacterSet).uppercaseString
+        
+        if (cString.hasPrefix("#")) {
+            cString = cString.substringFromIndex(cString.startIndex.advancedBy(1))
+        }
+        
+        if ((cString.characters.count) != 6) {
+            return UIColor.grayColor()
+        }
+        
+        var rgbValue:UInt32 = 0
+        NSScanner(string: cString).scanHexInt(&rgbValue)
+        
+        return UIColor(
+            red: CGFloat((rgbValue & 0xFF0000) >> 16) / 255.0,
+            green: CGFloat((rgbValue & 0x00FF00) >> 8) / 255.0,
+            blue: CGFloat(rgbValue & 0x0000FF) / 255.0,
+            alpha: CGFloat(1.0)
+        )
     }
 }
